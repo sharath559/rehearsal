@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15172c"/><stop offset="1" stop-color="#33316a"/></linearGradient></defs>
+<rect width="1280" height="360" rx="24" fill="url(#bg)"/>
+<circle cx="1140" cy="20" r="220" fill="#aca4ff" opacity=".08"/>
+<text x="70" y="77" fill="#bdb5ff" font-size="17" font-family="Arial,sans-serif" letter-spacing="4">ON-DEVICE AI · INSPECTABLE ACTIONS</text>
+<text x="65" y="166" fill="#fff" font-size="76" font-weight="700" font-family="Arial,sans-serif">Rehearsal</text>
+<text x="70" y="214" fill="#d7d6eb" font-size="25" font-family="Arial,sans-serif">Preview. Approve. Recover.</text>
+<text x="70" y="296" fill="#a6a6c9" font-size="18" font-family="Arial,sans-serif">SwiftUI + Apple Foundation Models · Sandbox edition</text>
+<g fill="none" stroke="#bbb4ff" stroke-width="3"><rect x="853" y="109" width="170" height="130" rx="18"/><rect x="877" y="133" width="170" height="130" rx="18" fill="#353263"/><path d="m938 168 43 30-43 30Z" fill="#bbb4ff" stroke="none"/></g>
+</svg>

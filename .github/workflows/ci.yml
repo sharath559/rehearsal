@@ -1,0 +1,27 @@
+name: Swift checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Toolchain (Apple integration requires Swift 6.2+)
+        run: |
+          xcodebuild -version
+          swift --version
+          swift -e 'import FoundationModels; print("Foundation Models SDK present")'
+      - name: Check publication contents
+        run: python3 scripts/check_publication.py
+      - name: Build native app and real Apple integration
+        run: swift build
+      - name: Test deterministic behavior
+        run: swift test --enable-code-coverage
+      - name: Run interruption and recovery demo
+        run: swift run rehearsal-demo

@@ -1,0 +1,26 @@
+name: Rehearsal
+options:
+  deploymentTarget:
+    iOS: "16.0"
+packages:
+  Rehearsal:
+    path: .
+targets:
+  Rehearsal:
+    type: application
+    platform: iOS
+    sources:
+      - Sources/RehearsalApp
+    dependencies:
+      - package: Rehearsal
+        product: RehearsalCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sharathchandra.rehearsal
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Rehearsal
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic

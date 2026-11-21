@@ -98,6 +98,13 @@ final class RehearsalTests: XCTestCase {
         catch { XCTAssertEqual(error as? RehearsalError, .staleProposal) }
         let effects = await journal.effectCount(); XCTAssertEqual(effects, 0)
     }
+    func testExpiredApprovalBlocksWrites() async throws {
+        let (journal, p) = try await setup()
+        try await journal.approve(p.id)
+        do { _ = try await journal.execute(p.id, now: p.start); XCTFail("Expected expiration") }
+        catch { XCTAssertEqual(error as? RehearsalError, .expiredProposal) }
+        let effects = await journal.effectCount(); XCTAssertEqual(effects, 0)
+    }
     func testCancelledProposalCannotExecute() async throws {
         let (journal, p) = try await setup()
         try await journal.approve(p.id); try await journal.cancel(p.id)

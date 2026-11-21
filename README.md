@@ -2,6 +2,8 @@
 
 # Rehearsal
 
+[![Swift checks](https://github.com/sharath559/rehearsal/actions/workflows/ci.yml/badge.svg)](https://github.com/sharath559/rehearsal/actions/workflows/ci.yml)
+
 **An Apple Foundation Models integration exploring dependable, on-device AI actions.**
 
 Rehearsal turns a focus-time request into a scheduling preview. You review the exact

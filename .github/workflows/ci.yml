@@ -25,3 +25,9 @@ jobs:
         run: swift test --enable-code-coverage
       - name: Run interruption and recovery demo
         run: swift run rehearsal-demo
+      - name: Install iOS project generator
+        run: brew install xcodegen
+      - name: Compile iOS simulator app (no signing)
+        run: |
+          xcodegen generate
+          xcodebuild -project Rehearsal.xcodeproj -scheme Rehearsal -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build

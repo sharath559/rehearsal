@@ -2,7 +2,7 @@ import Foundation
 
 public enum RehearsalError: Error, Equatable, LocalizedError {
     case invalidRequest, noSlot, missingProposal, notApproved, staleProposal
-    case cancelled, injectedFailure, interrupted, unsupportedStore
+    case cancelled, injectedFailure, interrupted, unsupportedStore, expiredProposal
 
     public var errorDescription: String? {
         switch self {
@@ -15,6 +15,7 @@ public enum RehearsalError: Error, Equatable, LocalizedError {
         case .injectedFailure: return "Simulated reminder failure. The focus block is saved; retry to finish."
         case .interrupted: return "Simulated interruption after a write. Retry to reconcile the result."
         case .unsupportedStore: return "This journal version is unsupported. Keep a backup before upgrading."
+        case .expiredProposal: return "The proposed start or reminder time has passed. Generate a fresh preview."
         }
     }
 }

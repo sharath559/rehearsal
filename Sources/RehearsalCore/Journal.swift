@@ -62,7 +62,7 @@ public actor RehearsalJournal {
         try commit(next)
     }
 
-    public func execute(_ id: UUID, fault: ExecutionFault = .none) throws -> Proposal {
+    public func execute(_ id: UUID, fault: ExecutionFault = .none, now: Date = Date()) throws -> Proposal {
         let i = try index(id)
         let proposal = data.proposals[i]
         if proposal.state == .completed { return proposal }
@@ -72,6 +72,9 @@ public actor RehearsalJournal {
         }
         let eventKey = id.uuidString + ":event"
         let reminderKey = id.uuidString + ":reminder"
+        if data.effects[eventKey] == nil && (proposal.start <= now || proposal.reminderAt < now) {
+            try setState(i, .stale); throw RehearsalError.expiredProposal
+        }
         // Once our event exists, completion only adds the approved reminder. Never recreate the event.
         if data.effects[eventKey] == nil && proposal.sourceRevision != data.schedule.revision {
             try setState(i, .stale); throw RehearsalError.staleProposal

@@ -6,6 +6,7 @@ The XCTest suite covers slot selection, adjacency, overlapping intervals, decode
 input validation, stale approvals, explicit approval gates, cancellation, partial
 failure, interruption and process restart, concurrent retries, corrupted journals,
 write failure, private file permissions, and daylight-saving wall-clock behavior.
+Expired approvals are also rejected before a new event is written.
 
 Run `swift test` with a full Xcode installation. The CLI additionally exercises
 approval rejection, interruption, recovery, and completed retries with fixed
@@ -17,6 +18,10 @@ script offers a core/demo check without full Xcode. GitHub Actions is configured
 to build and test using a modern Xcode SDK and to compile the Apple integration.
 Consult the actual workflow run for the current result rather than treating this
 configuration as a passing result.
+
+The direct compiler demo passed on the development machine: execution without
+approval was blocked, an interruption was injected after the first sandbox write,
+and recovery plus a repeated execution produced exactly two sandbox effects.
 
 ## Apple model evaluation: not run
 

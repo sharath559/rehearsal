@@ -3,7 +3,9 @@
 ## Model boundary
 
 ApplePlanner creates a fresh session for each request. Input is capped at 1,000
-characters and the schedule at 32 busy intervals. The tool exposes timestamps,
+characters and the selected day's schedule at 32 busy intervals. Intervals from
+other days are excluded; overnight intervals that overlap the day are included.
+The tool exposes timestamps,
 not event titles or arbitrary calendar notes, and accepts at most three calls.
 Tool use is optional: the extraction task does not require schedule retrieval.
 All planning and revision checks use the actual application snapshot regardless
@@ -21,7 +23,10 @@ Validate fields even after Codable decoding. Construct window boundaries using a
 Gregorian/user calendar and local wall-clock time rather than adding elapsed
 hours to midnight. Sort busy intervals, advance past overlaps, and select the
 earliest fitting slot. Duration is elapsed time; window boundaries are wall-clock
-times. A reminder already in the past causes rejection.
+times. The candidate start leaves the reminder lead plus one minute for review
+after `now`. This avoids rejecting an entire window merely because its first
+possible reminder has passed. Normal overlap checks still apply after adjustment.
+If the adjusted block cannot fit before the latest finish, no slot is returned.
 
 Nonexistent DST wall times use strict matching and are rejected when matching
 moves outside the selected day. Repeated times select the first occurrence.

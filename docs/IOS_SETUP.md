@@ -17,5 +17,8 @@ The app does not request calendar permission because v0.1 only simulates writes.
 Building or signing the application does not enable Apple Intelligence on an
 ineligible device. Physical-device validation remains pending.
 
+See [Apple setup](APPLE_SETUP.md) for model availability, hardware requirements,
+account/signing distinctions, and troubleshooting. No `.env` is required.
+
 The generated iOS project references the local `RehearsalCore` package. It compiles
 the shared app sources; the macOS package executable is not used as an iOS binary.

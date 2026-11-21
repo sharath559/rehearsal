@@ -56,6 +56,14 @@ public struct ScheduleSnapshot: Codable, Equatable, Sendable {
     public init(revision: UUID = UUID(), busy: [BusyInterval]) {
         self.revision = revision; self.busy = busy
     }
+
+    /// Include cross-midnight intervals, but exclude adjacent days and invalid intervals.
+    public func busy(on day: Date, calendar: Calendar) -> [BusyInterval] {
+        guard let window = calendar.dateInterval(of: .day, for: day) else { return [] }
+        return busy.filter {
+            $0.start < $0.end && $0.start < window.end && $0.end > window.start
+        }.sorted { $0.start < $1.start }
+    }
 }
 
 public enum ProposalState: String, Codable, Sendable {
@@ -82,7 +90,7 @@ public enum Planner {
                                snapshot: ScheduleSnapshot, calendar: Calendar,
                                now: Date = Date()) throws -> Proposal {
         // Validate again because Codable decoding bypasses the public initializer.
-        _ = try PlanningRequest(title: request.title, duration: request.duration,
+        let validated = try PlanningRequest(title: request.title, duration: request.duration,
                                 earliestMinute: request.earliestMinute,
                                 latestMinute: request.latestMinute, reminderLead: request.reminderLead)
         let midnight = calendar.startOfDay(for: day)
@@ -97,10 +105,11 @@ public enum Planner {
               calendar.isDate(earliest, inSameDayAs: day),
               request.latestMinute == 1440 || calendar.isDate(latest, inSameDayAs: day)
         else { throw RehearsalError.invalidRequest }
-        var candidate = max(earliest, now)
+        // A valid future slot may still exist when the earliest possible reminder is past.
+        // Reserve a minute to review before the reminder, including zero-lead requests.
+        var candidate = max(earliest, now.addingTimeInterval(TimeInterval(request.reminderLead * 60 + 60)))
         let duration = TimeInterval(request.duration * 60)
-        for interval in snapshot.busy.sorted(by: { $0.start < $1.start }) {
-            guard interval.end > interval.start else { continue }
+        for interval in snapshot.busy(on: day, calendar: calendar) {
             if candidate < interval.end && candidate.addingTimeInterval(duration) > interval.start {
                 candidate = interval.end
             }
@@ -109,7 +118,7 @@ public enum Planner {
         guard end <= latest else { throw RehearsalError.noSlot }
         let reminder = candidate.addingTimeInterval(-TimeInterval(request.reminderLead * 60))
         guard reminder >= now else { throw RehearsalError.noSlot }
-        return Proposal(id: UUID(), sourceRevision: snapshot.revision, title: request.title,
+        return Proposal(id: UUID(), sourceRevision: snapshot.revision, title: validated.title,
                         start: candidate, end: end, reminderAt: reminder,
                         timeZoneIdentifier: calendar.timeZone.identifier, state: .preview)
     }

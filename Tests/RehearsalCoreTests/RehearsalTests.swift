@@ -53,7 +53,52 @@ final class RehearsalTests: XCTestCase {
     }
     func testNoPastReminder() throws {
         let request = try PlanningRequest(title: "Work", duration: 30)
-        XCTAssertThrowsError(try Planner.propose(request, day: day, snapshot: ScheduleSnapshot(busy: []), calendar: calendar, now: at(13)))
+        let p = try Planner.propose(request, day: day, snapshot: ScheduleSnapshot(busy: []), calendar: calendar, now: at(13))
+        XCTAssertEqual(p.start, at(13, 16))
+        XCTAssertEqual(p.reminderAt, at(13, 1))
+    }
+    func testZeroLeadStillLeavesTimeToReview() throws {
+        let request = try PlanningRequest(title: "Work", duration: 30, reminderLead: 0)
+        let p = try Planner.propose(request, day: day, snapshot: ScheduleSnapshot(busy: []), calendar: calendar, now: at(13))
+        XCTAssertEqual(p.start, at(13, 1))
+        XCTAssertEqual(p.reminderAt, p.start)
+    }
+    func testReminderLeadCanExhaustWindow() throws {
+        let request = try PlanningRequest(title: "Work", duration: 30, earliestMinute: 780, latestMinute: 810)
+        XCTAssertThrowsError(try Planner.propose(request, day: day, snapshot: ScheduleSnapshot(busy: []), calendar: calendar, now: at(13))) {
+            XCTAssertEqual($0 as? RehearsalError, .noSlot)
+        }
+    }
+    func testReminderAdjustmentStillAvoidsBusyIntervals() throws {
+        let request = try PlanningRequest(title: "Work", duration: 30)
+        let snapshot = ScheduleSnapshot(busy: [BusyInterval(start: at(13, 10), end: at(14))])
+        let p = try Planner.propose(request, day: day, snapshot: snapshot, calendar: calendar, now: at(13))
+        XCTAssertEqual(p.start, at(14))
+        XCTAssertEqual(p.reminderAt, at(13, 45))
+    }
+    func testScheduleToolScopeIncludesOnlyOverlappingDay() throws {
+        let nextDay = calendar.date(byAdding: .day, value: 1, to: day)!
+        let previousDay = calendar.date(byAdding: .day, value: -1, to: day)!
+        let crossing = BusyInterval(start: previousDay.addingTimeInterval(23 * 3600), end: at(1))
+        let current = BusyInterval(start: at(14), end: at(15))
+        let snapshot = ScheduleSnapshot(busy: [
+            BusyInterval(start: nextDay, end: nextDay.addingTimeInterval(3600)),
+            BusyInterval(start: previousDay, end: day),
+            BusyInterval(start: at(15), end: at(14)), current, crossing
+        ])
+        XCTAssertEqual(snapshot.busy(on: day, calendar: calendar), [crossing, current])
+    }
+    func testDecodedTitleIsNormalizedBeforePreview() throws {
+        let raw = Data(#"{"title":"  Work  ","duration":30,"earliestMinute":780,"latestMinute":1020,"reminderLead":15}"#.utf8)
+        let request = try JSONDecoder().decode(PlanningRequest.self, from: raw)
+        let p = try Planner.propose(request, day: day, snapshot: ScheduleSnapshot(busy: []), calendar: calendar, now: day)
+        XCTAssertEqual(p.title, "Work")
+    }
+    func testCustomWindowAndReminder() throws {
+        let request = try PlanningRequest(title: "Read", duration: 45, earliestMinute: 540, latestMinute: 660, reminderLead: 5)
+        let p = try Planner.propose(request, day: day, snapshot: ScheduleSnapshot(busy: []), calendar: calendar, now: day)
+        XCTAssertEqual(p.start, at(9)); XCTAssertEqual(p.end, at(9, 45))
+        XCTAssertEqual(p.reminderAt, at(8, 55))
     }
     func testCannotExecuteWithoutApproval() async throws {
         let (journal, p) = try await setup()

@@ -14,6 +14,9 @@ final class RehearsalModel: ObservableObject {
     @Published var day = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
     @Published var prompt = "Find 90 minutes for interview preparation between 1 pm and 5 pm. Remind me 15 minutes before."
     @Published var duration = 90
+    @Published var earliestMinute = 780
+    @Published var latestMinute = 1020
+    @Published var reminderLead = 15
     @Published var title = "Interview preparation"
     @Published var reminderFailure = false
     private var journal: RehearsalJournal?
@@ -41,7 +44,11 @@ final class RehearsalModel: ObservableObject {
                 let request: PlanningRequest
                 if useApple {
                     request = try await ApplePlanner.extract(prompt, day: day, snapshot: snapshot, calendar: calendar)
-                } else { request = try PlanningRequest(title: title, duration: duration) }
+                } else {
+                    request = try PlanningRequest(title: title, duration: duration,
+                        earliestMinute: earliestMinute, latestMinute: latestMinute,
+                        reminderLead: reminderLead)
+                }
                 try Task.checkCancellation()
                 let proposal = try Planner.propose(request, day: day, snapshot: snapshot, calendar: calendar)
                 try await journal.stage(proposal)
@@ -94,17 +101,22 @@ struct RehearsalView: View {
                 Text(ApplePlanner.availability).font(.caption).foregroundStyle(.secondary)
                 GroupBox("1 · Shape your request") {
                     VStack(alignment: .leading, spacing: 12) {
-                        DatePicker("Selected day", selection: $model.day, in: Date()..., displayedComponents: .date)
-                        TextField("Focus block title", text: $model.title).textFieldStyle(.roundedBorder)
-                        Stepper("\(model.duration) minutes", value: $model.duration, in: 15...240, step: 15)
-                        Text("Manual demo: 13:00–17:00, reminder 15 minutes before. The first run seeds lunch 12:00–13:00 and a 14:00–15:00 appointment for tomorrow. Later dates use the same journal without new seed appointments.")
+                        Group {
+                            DatePicker("Selected day", selection: $model.day, in: Date()..., displayedComponents: .date)
+                            TextField("Focus block title", text: $model.title).textFieldStyle(.roundedBorder)
+                            Stepper("\(model.duration) minutes", value: $model.duration, in: 15...240, step: 15)
+                            minutePicker("Earliest start", selection: $model.earliestMinute, values: Array(stride(from: 0, to: 1440, by: 15)))
+                            minutePicker("Latest finish", selection: $model.latestMinute, values: Array(stride(from: 15, through: 1440, by: 15)))
+                            Stepper("Reminder: \(model.reminderLead) minutes before", value: $model.reminderLead, in: 0...60, step: 5)
+                        }
+                        Text("Times use \(model.calendar.timeZone.identifier). 24:00 means the end of the selected day. Planning leaves at least one minute to review before the reminder. The first run seeds lunch 12:00–13:00 and a 14:00–15:00 appointment for tomorrow. Later dates use the same journal without new seed appointments.")
                             .font(.caption).foregroundStyle(.secondary)
                         Button("Preview manual demo") { model.preview(useApple: false) }
                         Divider()
                         TextEditor(text: $model.prompt).frame(height: 80)
                             .overlay(RoundedRectangle(cornerRadius: 6).stroke(.secondary.opacity(0.25)))
                         Button("Interpret with Apple Foundation Models") { model.preview(useApple: true) }
-                        Text("Apple mode uses the text request; manual title and duration fields apply only to the manual demo.")
+                        Text("Apple mode uses the selected day and the text request. Title, duration, window, and reminder controls above apply only to the manual demo.")
                             .font(.caption).foregroundStyle(.secondary)
                     }.padding(8)
                 }.disabled(model.working)
@@ -151,5 +163,13 @@ struct RehearsalView: View {
     }
     private func action(_ label: String, _ proposal: Proposal, _ operation: String) -> some View {
         Button(label) { Task { await model.act(proposal, action: operation) } }
+    }
+
+    private func minutePicker(_ label: String, selection: Binding<Int>, values: [Int]) -> some View {
+        Picker(label, selection: selection) {
+            ForEach(values, id: \.self) { minute in
+                Text(String(format: "%02d:%02d", minute / 60, minute % 60)).tag(minute)
+            }
+        }
     }
 }

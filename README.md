@@ -88,10 +88,13 @@ bash scripts/direct-demo.sh
 
 For iPhone, [generate the Xcode project and build the app](docs/IOS_SETUP.md).
 The iOS configuration is supplied; device installation is not a published release.
+For the exact hardware, software, and account requirements, read
+[Apple setup — no model keys required](docs/APPLE_SETUP.md).
 
 ## Try the native app
 
-1. Choose tomorrow and preview the manual 90-minute focus block.
+1. Choose tomorrow, set a time window and reminder lead, and preview the manual
+   90-minute focus block. The default window is 13:00–17:00.
 2. Review the title, date, timezone, start/end, and reminder time.
 3. Approve, then execute. These are separate controls.
 4. For a failure scenario, enable **Simulate reminder failure**, execute, disable
@@ -138,7 +141,10 @@ Read [architecture and guarantees](docs/ARCHITECTURE.md) and
 ## Initial scope and limits
 
 - One focus block and one reminder on an explicitly selected day.
-- Manual mode uses 13:00–17:00 and a 15-minute reminder lead.
+- Manual mode has editable start/finish windows in 15-minute increments and a
+  reminder lead from 0–60 minutes. Defaults are 13:00–17:00 and 15 minutes.
+- Planning reserves at least one minute before the reminder for review. If this
+  pushes a same-day request beyond its window, no slot is proposed.
 - Apple mode extracts those fields from your text; manual fields do not override it.
 - Ambiguous or unsupported requests are intended to request clarification. This
   behavior needs real-model evaluation; typed output alone does not prove semantic correctness.
@@ -150,7 +156,7 @@ Read [architecture and guarantees](docs/ARCHITECTURE.md) and
 ## Development roadmap
 
 1. Record real-device model results against the [evaluation cases](docs/model-evaluation.json).
-2. Add explicit time-window controls and a richer proposal comparison UI.
+2. Add a richer proposal comparison UI and extracted-constraint summaries.
 3. Introduce an EventKit adapter with permission handling, external-write reconciliation,
    and clear partial-completion semantics.
 4. Add App Intents for selected app actions after the executor is validated.

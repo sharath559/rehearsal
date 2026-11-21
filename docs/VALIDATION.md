@@ -7,6 +7,9 @@ input validation, stale approvals, explicit approval gates, cancellation, partia
 failure, interruption and process restart, concurrent retries, corrupted journals,
 write failure, private file permissions, and daylight-saving wall-clock behavior.
 Expired approvals are also rejected before a new event is written.
+Regression cases also cover same-day reminder lead adjustment, zero-lead review
+time, editable windows, normalization of decoded titles, and selected-day schedule
+filtering including overnight intervals.
 
 Run `swift test` with a full Xcode installation. The CLI additionally exercises
 approval rejection, interruption, recovery, and completed retries with fixed

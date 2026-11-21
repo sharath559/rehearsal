@@ -84,10 +84,11 @@ enum ApplePlanner {
             }
             let formatter = ISO8601DateFormatter()
             formatter.timeZone = calendar.timeZone
-            let payload = snapshot.busy.map {
+            let selectedBusy = snapshot.busy(on: day, calendar: calendar)
+            guard selectedBusy.count <= 32 else { throw ApplePlannerError.tooLong }
+            let payload = selectedBusy.map {
                 "\(formatter.string(from: $0.start)) / \(formatter.string(from: $0.end))"
             }.joined(separator: "\n")
-            guard snapshot.busy.count <= 32 else { throw ApplePlannerError.tooLong }
             let tool = ReadBusySchedule(payload: payload, budget: ReadBudget())
             let session = LanguageModelSession(tools: [tool], instructions: """
                 Extract one focus-block request on the selected day. Never execute actions.
